@@ -589,7 +589,10 @@
     progress "Preparing system"
 
     if [ "$SYSTEM_TORAM" = "no" -o "$INSTALLED_MEMORY" -lt "$SYSTEM_TORAM_LIMIT" ]; then
-      mount_part "/flash/$IMAGE_SYSTEM" "/sysroot" "ro,loop"
+      /bin/busybox mkdir -p /system.squashfs
+      /bin/busybox mkdir -p /storage/rootfs-overlay
+      mount_part "/flash/$IMAGE_SYSTEM" "/system.squashfs" "ro,loop"
+      /bin/busybox mount -t overlayfs -o lowerdir=/system.squashfs,upperdir=/storage/rootfs-overlay overlayfs /sysroot
     else
       cp /flash/$IMAGE_SYSTEM /dev/$IMAGE_SYSTEM
       mount_part "/dev/$IMAGE_SYSTEM" "/sysroot" "ro,loop"
@@ -598,6 +601,7 @@
     mount --move /flash /sysroot/flash
 
     if [ -n "$disk" ]; then
+      /bin/busybox mkdir -p /sysroot/storage
       mount --move /storage /sysroot/storage
     fi
 
